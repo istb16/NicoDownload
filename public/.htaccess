@@ -1,0 +1,5 @@
+AuthUserFile /var/www/www.ihpsystem.com/www/work/tools/nicoDownload/private/.htpasswd
+AuthGroupFile /dev/null
+AuthName "Please enter your ID and Password"
+AuthType Basic
+require valid-user

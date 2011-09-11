@@ -1,0 +1,15 @@
+<config>
+	<PhpPath>/usr/bin/php</PhpPath>
+	<DataDir>../private/data</DataDir>
+	<CmdDir>../private/cmd</CmdDir>
+	<LibDir>../private/lib</LibDir>
+	<WorkDir>../private/tmp</WorkDir>
+	<FileDir>../public/files</FileDir>
+	<FileUrl>files/</FileUrl>
+	<NicoLoginEmail>ニコニコ動画アカウントメールアドレス</NicoLoginEmail>
+	<NicoLoginPassword>ニコニコ動画アカウントパスワード</NicoLoginPassword>
+	<YoutubeLoginEmail>Youtubeアカウントメールアドレス</YoutubeLoginEmail>
+	<YoutubeLoginPassword>Youtubeアカウントパスワード</YoutubeLoginPassword>
+	<YoutubeDevClientId>Youtube Data APIのClientID</YoutubeDevClientId>
+	<YoutubeDevDataAPIKey>Youtube Data APIのAPI Key</YoutubeDevDataAPIKey>
+</config>
