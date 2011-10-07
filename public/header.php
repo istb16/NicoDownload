@@ -13,6 +13,8 @@
 			<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 		<![endif]-->
 		<script src="js/jquery-1.6.2.min.js"></script>
+		<script src="js/jquery.lazyload.mini.js"></script>
+		<script src="js/jquery.tablesorter.min.js"></script>
 		<script src="js/common.js"></script>
 
 		<link href="css/bootstrap-1.1.1.min.css" rel="stylesheet">

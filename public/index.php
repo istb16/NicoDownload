@@ -1,16 +1,20 @@
 <?php require_once(dirname(__FILE__) . '/header.php'); ?>
 
 <?php
-// TODO: タイトルが付いたら、表示できるように
-
 	// 動画リストの取得
 	$videos = @simplexml_load_file($config->DataDir . Common::$FileNameVideos);
 ?>
 		<section>
-			<table class="zebra-striped">
+			<div id="message" style="margin:5px;">
+			</div>
+
+			<table id="videoList" class="zebra-striped">
 				<!-- テーブルヘッダー -->
+				<thead>
 				<tr>
+					<th>&nbsp;</th>
 					<th>SmileID</th>
+					<th>タイトル</th>
 					<th>モード</th>
 					<th>ステータス</th>
 					<th>DL時間帯</th>
@@ -20,8 +24,10 @@
 
 				<!-- 追加データ -->
 				<tr>
-					<td><input id="newId" name="newId" size="10" required></td>
-					<td><select id="newUpMode"><?php
+					<td>&nbsp;</td>
+					<td><input id="newId" name="newId" size="10" placeholder="sm000000" required></td>
+					<td>&nbsp;</td>
+					<td><select id="newUpMode" style="width: 8em"><?php
 						foreach (Common::$UpMode as $k => $v) {
 							$selected = '';
 							if ($k == '1') $selected = ' selected';
@@ -51,22 +57,31 @@
 					<td><input id="newIsPrivate" type="checkbox" value="" checked></td>
 					<td><button class="btn" onclick="addVideo(); return false;">追加</td>
 				</tr>
+				</thead>
 
 				<!-- 登録データ -->
+				<tbody>
 <?php if (!empty($videos)) : ?>
 <?php foreach ($videos->video as $video) : ?>
 				<tr>
+					<td>
+<?php $smileType = strtolower(substr($video->videoId, 0, 2)); ?>
+<?php if (($smileType == 'nm') || ($smileType == 'sm')): ?>
+						<img src="http://tn-skr.smilevideo.jp/smile?i=<?php echo Common::Sanitize(substr($video->videoId, 2, strlen($video->videoId) - 2)); ?>" style="width:65px; height:50px" />
+<?php else: ?>
+						<img style="width:65px; height:50px" />
+<?php endif; ?>
+					</td>
 					<td><?php
-						// タイトルかvideoIdを表示する
-						$str = (empty($video->title)) ? $video->videoId : $video->title;
 						// URLが定義されている場合は、リンクにする
 						if (!empty($video->fileUrl)) {
-							echo sprintf('<a href="%s">%s</a>', $video->fileUrl, Common::Sanitize($str));
+							echo sprintf('<a href="%s">%s</a>', $video->fileUrl, Common::Sanitize($video->videoId));
 						}
 						else {
-							echo Common::Sanitize($str);
+							echo Common::Sanitize($video->videoId);
 						}
 					?></td>
+					<td><?php echo Common::Sanitize($video->title); ?> </td>
 					<td><?php echo Common::GetUpModeName($video->upMode); ?></td>
 					<td><?php echo Common::GetUpStatusName($video->status); ?></td>
 					<td><?php echo Common::Sanitize($video->dlTimeBegin . '～' . $video->dlTimeEnd); ?></td>
@@ -75,110 +90,123 @@
 				</tr>
 <?php endforeach; ?>
 <?php endif; ?>
+				</tbody>
 			</table>
-
-			<div id="message" style="margin:5px;">
-			</div>
 		</section>
 
 		<script>
-			function delVideo(id) {
-				$.post(
-					'delVideo.php',
-					{'videoId': id},
-					function (data, status) {
-						if (data == 1) {
-							location.reload();
-						}
-						else {
-							var errorMessage = '<div class="alert-message error">' + data + '</div>';
-							$('#message').html(errorMessage);
-						}
-					},
-					'html'
-				);
+function delVideo(id) {
+	$.post(
+		'delVideo.php',
+		{'videoId': id},
+		function (data, status) {
+			if (data == 1) {
+				location.reload();
 			}
+			else {
+				var errorMessage = '<div class="alert-message error">' + data + '</div>';
+				$('#message').html(errorMessage);
+			}
+		},
+		'html'
+	);
+}
 
-			function addVideo() {
-				// 入力データの収集
-				var id = $('#newId').val();
-				var mode = $('#newUpMode').val();
-				var dlTimeBegin = $('#newDlTimeBegin').val();
-				var dlTimeEnd = $('#newDlTimeEnd').val();
-				var isPrivate = $('#newIsPrivate').attr('checked');
-				if (isPrivate) isPrivate = 1;
-				else isPrivate = 0;
+function addVideo() {
+	// 入力データの収集
+	var id = $('#newId').val();
+	var mode = $('#newUpMode').val();
+	var dlTimeBegin = $('#newDlTimeBegin').val();
+	var dlTimeEnd = $('#newDlTimeEnd').val();
+	var isPrivate = $('#newIsPrivate').attr('checked');
+	if (isPrivate) isPrivate = 1;
+	else isPrivate = 0;
 
-				// 入力チェック
-				var errorMessage = '';
-				if (id.length <= 0) {
-					errorMessage += '・SimleIDはかならず入力してください';
-				}
-				if (dlTimeBegin >= dlTimeEnd) {
-					if (errorMessage.length > 0) errorMessage += '<br/>';
-					errorMessage += '・DL時間帯は終了より開始を前にしてください';
-				}
+	// 入力チェック
+	var errorMessage = '';
+	if (id.length <= 0) {
+		errorMessage += '・SimleIDはかならず入力してください';
+	}
+	else { }
+	if (dlTimeBegin >= dlTimeEnd) {
+		if (errorMessage.length > 0) errorMessage += '<br/>';
+		errorMessage += '・DL時間帯は終了より開始を前にしてください';
+	}
 
-				if (errorMessage.length > 0) {
-					errorMessage = '<div class="alert-message error">' + errorMessage + '</div>';
-					var message = $('#message');
-					message.html(errorMessage);
+	if (errorMessage.length > 0) {
+		errorMessage = '<div class="alert-message error">' + errorMessage + '</div>';
+		var message = $('#message');
+		message.html(errorMessage);
 
-					return false;
+		return false;
+	}
+	else {
+		$.post(
+			'addVideo.php',
+			{'videoId': id, 'upMode': mode, 'dlTimeBegin': dlTimeBegin, 'dlTimeEnd': dlTimeEnd, 'isPrivate': isPrivate},
+			function (data, status) {
+				if (data == 1) {
+					// デフォルト値として保持しておく
+					localStorage['defaultUpMode'] = mode;
+					localStorage['defaultDlTimeBegin'] = dlTimeBegin;
+					localStorage['defaultDlTimeEnd'] = dlTimeEnd;
+					localStorage['defaultIsPrivate'] = isPrivate;
+
+					location.reload();
 				}
 				else {
-					$.post(
-						'addVideo.php',
-						{'videoId': id, 'upMode': mode, 'dlTimeBegin': dlTimeBegin, 'dlTimeEnd': dlTimeEnd, 'isPrivate': isPrivate},
-						function (data, status) {
-							if (data == 1) {
-								// デフォルト値として保持しておく
-								localStorage['defaultUpMode'] = mode;
-								localStorage['defaultDlTimeBegin'] = dlTimeBegin;
-								localStorage['defaultDlTimeEnd'] = dlTimeEnd;
-								localStorage['defaultIsPrivate'] = isPrivate;
-
-								location.reload();
-							}
-							else {
-								var errorMessage = '<div class="alert-message error">' + data + '</div>';
-								$('#message').html(errorMessage);
-							}
-						},
-						'html'
-					);
+					var errorMessage = '<div class="alert-message error">' + data + '</div>';
+					$('#message').html(errorMessage);
 				}
+			},
+			'html'
+		);
+	}
 
-				return true;
+	return true;
+}
+
+$(function()
+{
+	// プラグインの設定
+	$("img").lazyload({ effect : "fadeIn" });
+	$("#videoList").tablesorter({
+		sortList: [[4,1]],
+		headers: {
+			0: {
+				sorter: false
+			},
+			7: {
+				sorter: false
 			}
+		}
+	});
 
-			$(function()
-			{
-				// 追加時のデフォルト選択
-				var mode = localStorage['defaultUpMode'];
-				if (mode) {
-					$('#newUpMode').val(mode);
-				}
+	// 追加時のデフォルト選択
+	var mode = localStorage['defaultUpMode'];
+	if (mode) {
+		$('#newUpMode').val(mode);
+	}
 
-				var dlTimeBegin = localStorage['defaultDlTimeBegin'];
-				if (dlTimeBegin) {
-					$('#newDlTimeBegin').val(dlTimeBegin);
-				}
+	var dlTimeBegin = localStorage['defaultDlTimeBegin'];
+	if (dlTimeBegin) {
+		$('#newDlTimeBegin').val(dlTimeBegin);
+	}
 
-				var dlTimeEnd = localStorage['defaultDlTimeEnd'];
-				if (dlTimeEnd) {
-					$('#newDlTimeEnd').val(dlTimeEnd);
-				}
+	var dlTimeEnd = localStorage['defaultDlTimeEnd'];
+	if (dlTimeEnd) {
+		$('#newDlTimeEnd').val(dlTimeEnd);
+	}
 
-				var isPrivate = localStorage['defaultIsPrivate'];
-				if (isPrivate === '1') {
-					$('#newIsPrivate').attr('checked', true);
-				}
-				else if (isPrivate === '0') {
-					$('#newIsPrivate').attr('checked', false);
-				}
-				else {}
-			});
+	var isPrivate = localStorage['defaultIsPrivate'];
+	if (isPrivate === '1') {
+		$('#newIsPrivate').attr('checked', true);
+	}
+	else if (isPrivate === '0') {
+		$('#newIsPrivate').attr('checked', false);
+	}
+	else {}
+});
 		</script>
 
 <?php require_once(dirname(__FILE__) . '/footer.php'); ?>

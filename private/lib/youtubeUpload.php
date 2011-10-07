@@ -50,16 +50,16 @@ class YoutubeUpload
 			.	'<entry xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xmlns:yt="http://gdata.youtube.com/schemas/2007">'
 			.	  '<media:group>'
 			.		'<media:title type="plain">'
-			.			$title
+			.			htmlspecialchars($title, ENT_QUOTES)
 			.		'</media:title>'
 			.		'<media:description type="plain">'
-			.			$description
+			.			htmlspecialchars($description, ENT_QUOTES)
 			.		'</media:description>'
 			.		'<media:category scheme="http://gdata.youtube.com/schemas/2007/categories.cat">'
-			.			$category
+			.			htmlspecialchars($category, ENT_QUOTES)
 			.		'</media:category>'
 			.		'<media:keywords>'
-			.			$keywords
+			.			htmlspecialchars($keywords, ENT_QUOTES)
 			.		'</media:keywords>';
 		if ($private) $xml .= '<yt:private/>';
 		$xml .=   '</media:group>'
@@ -147,9 +147,9 @@ class YoutubeUpload
 				. 'Host: ' . $url['host'] . "\n"
 				. 'Authorization: GoogleLogin auth=' . $token . "\n"
 				. 'GData-Version: 2' . "\n"
-				. 'X-GData-Client: ' . $this->ClientID . "\n"
-				. 'X-GData-Key: key=' . $this->YoutubeDataAPIKey . "\n"
-				. 'Slug: ' . $fileName . "\n"
+				. 'X-GData-Client: ' . htmlspecialchars($this->ClientID, ENT_QUOTES) . "\n"
+				. 'X-GData-Key: key=' . htmlspecialchars($this->YoutubeDataAPIKey, ENT_QUOTES) . "\n"
+				. 'Slug: ' . htmlspecialchars($fileName, ENT_QUOTES) . "\n"
 				. 'Content-Type: multipart/related; boundary="END_OF_PART"' . "\n"
 				. 'Content-Length: ' . (strlen($contentHeader) + strlen($contentFooter ) + $fileSize) . "\n"
 				. 'Connection: close' . "\n\n";

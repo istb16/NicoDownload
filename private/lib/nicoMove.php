@@ -71,14 +71,8 @@ class NicoMove
 
 		// ダウンロードしたファイルをYoutubeへアップロード
 		if ($rtDl) {
-			// 説明にタグが入っているので、変換する
-			$rtDl['description'] = preg_replace('/<br[[:space:]]*\/?[[:space:]]*>/i', "\n", $rtDl['description']);
-			$rtDl['description'] = strip_tags($rtDl['description']);
-
-			// 説明に、ニコニコ動画からの転載である旨を追記
-			$rtDl['description'] = 'Original video: http://www.nicovideo.jp/watch/' . $videoId . "\n"
-				. "----------------------\n"
-				. $rtDl['description'];
+			// ニコニコ用の動画情報から、Youtube用の動画情報へアップロードに失敗しない為に変換する
+			$youtubeParam = $this->convNico2YoutubeInfo($rtDl, $videoId);
 
 			// Youtubeへアップロード
 			$yu = new YoutubeUpload();
@@ -89,11 +83,11 @@ class NicoMove
 			$yu->ClientID = $this->config->YoutubeDevClientId;
 
 			$rtUpload = $yu->Upload(
-				$rtDl['filePath'],
-				$rtDl['title'],
-				$rtDl['description'],
-				$this->convNicoTag2YoutubeCat($rtDl['tags']),
-				$this->convNicoTag2YoutubeKeywd($rtDl['tags']),
+				$youtubeParam['filePath'],
+				$youtubeParam['title'],
+				$youtubeParam['description'],
+				$youtubeParam['category'],
+				$youtubeParam['tags'],
 				$isPrivate
 			);
 
@@ -110,7 +104,7 @@ class NicoMove
 	}
 
 	//
-	// ニコニコ動画をYoutubeへ転載
+	// ニコニコ動画をファイルに保存
 	//
 	// [params]
 	// 	videoId : 動画ID
@@ -166,5 +160,63 @@ class NicoMove
 	{
 		if (empty($tags)) $tags[] = 'ニコニコ動画';
 		return implode(',', $tags);
+	}
+	
+	//
+	// Youtubeへアップロードできる情報になるように調整
+	//
+	// [params]
+	// 	data : 動画情報
+	// 		title : タイトル
+	// 		description : 説明
+	// 		tags : キーワード
+	// 	videoId : 動画ID
+	// [returns] 調整後の動画情報
+	//		title : タイトル（最大60文字）
+	//		description : 説明（タグの変換、ニコニコ転載明記、最大5000文字）
+	//		tags : キーワード
+	//		category : カテゴリ
+	private function convNico2YoutubeInfo($data, $videoId)
+	{
+		// タイトルが60文字を超えていたら間引く
+		$data['title'] = mb_strimwidth($data['title'], 0, 60, '...', 'UTF-8');
+		
+		// 説明にタグが入っているので、変換する
+		$data['description'] = preg_replace('/<br[[:space:]]*\/?[[:space:]]*>/i', "\n", $data['description']);
+		$data['description'] = strip_tags($data['description']);
+		
+		// 説明に、ニコニコ動画からの転載である旨を追記
+		$data['description'] = 'Original video: http://www.nicovideo.jp/watch/' . $videoId . "\n"
+			. "----------------------\n"
+			. $data['description'];
+			
+		// 説明が5000文字を超えていたら間引く
+		$data['description'] = mb_strimwidth($data['description'], 0, 5000, '...', 'UTF-8');
+		
+		// タグからカテゴリの作成
+		$data['category'] = $this->convNicoTag2YoutubeCat($data['tags']);
+		
+		// それぞれのタグでカンマ , を使っていたら変換する
+		foreach ($data['tags'] as $key => $tag) {
+			if (strpos($tag, ',') !== false) {
+				$data['tags'][$key] = str_replace(',', '，', $tag);
+			}
+		}
+		
+		// それぞれのタグが25文字を超えていたら間引く
+		foreach ($data['tags'] as $key => $tag) {
+			$data['tags'][$key] = mb_strimwidth($tag, 0, 25, '...', 'UTF-8');
+		}
+		
+		// それぞれのタグが1文字以下なら除外する
+		$tags = array();
+		foreach ($data['tags'] as $tag) {
+			if (mb_strlen($tag, 'UTF-8') > 1) $tags[] = $tag;
+		}
+		
+		// タグからキーワードを作成する
+		$data['tags'] = $this->convNicoTag2YoutubeKeywd($tags);
+		
+		return $data;
 	}
 }

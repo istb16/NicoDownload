@@ -171,12 +171,13 @@ class NicoDownload
 
 			// ダウンロードしたビデオに名前をつけて移動
 			$filePath = $this->DownloadDir;
-			if (!empty($fileName)) {
-				$filePath .= $fileName;
+			if (empty($fileName)) {
+				$fileName = $videoId . '_' . $info['title'] . '.' . $fileExtension;
 			}
-			else {
-				$filePath .= $videoId . '_' . $info['title'] . '.' . $fileExtension;
-			}
+			$fileName = str_replace("/", "／", $fileName);
+			$fileName = str_replace("\\", "¥", $fileName);
+			$fileName = str_replace("¥", "￥", $fileName);
+			$filePath .= $fileName;
 
 			rename($filePathDL, $filePath);
 
@@ -233,6 +234,7 @@ class NicoDownload
 				if ($posEd === false) $posEd = strlen($wk);
 				$title = substr($wk, $posSt, $posEd - $posSt);
 				$title = str_replace(array("\r\n", "\r", "\n"), '', $title);
+				$title = htmlspecialchars_decode($title, ENT_QUOTES);
 			}
 		}
 
@@ -254,6 +256,7 @@ class NicoDownload
 				if ($posEd === false) $posEd = strlen($wk);
 				$description = substr($wk, $posSt, $posEd - $posSt);
 				$description = str_replace(array("\r\n", "\r", "\n"), '', $description);
+				$description =htmlspecialchars_decode($description, ENT_QUOTES);
 			}
 		}
 
@@ -295,7 +298,7 @@ class NicoDownload
 				foreach ($tags as $k => $tag) {
 					$tag = str_replace(array("\r\n", "\r", "\n"), '', $tag);
 					$tag = trim($tag);
-					$tags[$k] = $tag;
+					$tags[$k] = htmlspecialchars_decode($tag, ENT_QUOTES);
 				}
 			}
 		}
